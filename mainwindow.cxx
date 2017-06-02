@@ -58,17 +58,30 @@ QString s;
 		ui->plainTextEditDecodedFrames->appendPlainText("unsupported frame type - skipping");
 		return;
 	}
-	dest = frame.mid(1, 6);
-	dest_ssid = frame[1 + 6];
-	src = frame.mid(1 + 7, 6);
-	src_ssid = frame[1 + 7 + 6];
-	control = frame[1 + 7 + 7];
+	dest = frame.mid(DEST_CALLSIGN_INDEX, CALLSIGN_FIELD_SIZE);
+	dest_ssid = frame[DEST_SSID_INDEX];
+	src = frame.mid(SRC_CALLSIGN_INDEX, CALLSIGN_FIELD_SIZE);
+	src_ssid = frame[SRC_SSID_INDEX];
+	control = frame[CONTROL_FIELD_INDEX];
 	for (i = 0; i < dest.length(); dest[i] = (unsigned char) dest[i] >> 1, i ++);
 	for (i = 0; i < src.length(); src[i] = (unsigned char) src[i] >> 1, i ++);
 	s += QString::fromLocal8Bit(src) + " --> " + QString::fromLocal8Bit(dest);
 	/* decode control byte */
 	if (!(control & 1))
-		s += QString(" (I frame): N(R) = %1, N(S) = %2, P/F = %3").arg(control >> 5).arg((control >> 1) & 3).arg((control & 4) ? 1 : 0);
+	{
+		if (frame.length() <= PID_FIELD_INDEX + /* 2 bytes for the FCS field */ 2)
+			s += "bad I frame length";
+		else
+		{
+			s += QString(" (I frame): N(R) = %1, N(S) = %2, P/F = %3").arg(control >> 5).arg((control >> 1) & 3).arg((control & 4) ? 1 : 0);
+			if ((unsigned char)frame[PID_FIELD_INDEX] != PID_NO_LAYER_3_PROTOCOL)
+				s += QString(" unsupported PID type - %1").arg((unsigned)(unsigned char) frame[PID_FIELD_INDEX]);
+			else
+			{
+				s += "info: " + QString::fromLocal8Bit(frame.mid(PID_FIELD_INDEX + 1, frame.length() - PID_FIELD_INDEX - 1 - 2));
+			}
+		}
+	}
 	else if (!(control & 2))
 		s += QString(" (I frame): N(R) = %1, S = %2, P/F = %3").arg(control >> 5).arg((control >> 1) & 3).arg((control & 4) ? 1 : 0);
 	else

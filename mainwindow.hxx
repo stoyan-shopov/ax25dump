@@ -13,6 +13,14 @@ enum
 	KISS_FEND			=	/* frame end character */	0xc0,
 	MINIMAL_FRAME_LENGTH_BYTES	=	/* kiss frame type byte */ 1 + /* address fields */ 14 + /* control byte */ 1,
 	KISS_FRAME_TYPE_DATA		=	0,
+	CALLSIGN_FIELD_SIZE		=	6,
+	DEST_CALLSIGN_INDEX		=	1,
+	DEST_SSID_INDEX			=	DEST_CALLSIGN_INDEX + 6,
+	SRC_CALLSIGN_INDEX		=	DEST_SSID_INDEX + 1,
+	SRC_SSID_INDEX			=	SRC_CALLSIGN_INDEX + 6,
+	CONTROL_FIELD_INDEX		=	SRC_SSID_INDEX + 1,
+	PID_FIELD_INDEX			=	CONTROL_FIELD_INDEX + 1,
+	PID_NO_LAYER_3_PROTOCOL		=	0xf0,
 };
 
 class MainWindow : public QMainWindow
