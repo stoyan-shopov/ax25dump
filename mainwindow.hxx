@@ -23,6 +23,21 @@ enum
 	PID_NO_LAYER_3_PROTOCOL		=	0xf0,
 };
 
+enum /* unnumbered frame control field types */
+{
+	/* UA */	UNN_ACKNOWLEDGE			=	12,
+	/* SABM */	UNN_SET_ASYNC_BALANCED_MODE	=	7,
+	/* DISC */	UNN_DISCONNECT			=	8,
+};
+
+enum /* supervisory frame field types */
+{
+	/* RR */	SUP_RECEIVER_READY		=	0,
+	/* RNR */	SUP_RECEIVER_NOT_READY		=	1,
+	/* REJ */	SUP_REJECT			=	2,
+	/* SREJ */	SUP_SELECTIVE_REJECT		=	3,
+};
+
 class MainWindow : public QMainWindow
 {
 	Q_OBJECT

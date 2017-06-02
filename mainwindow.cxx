@@ -73,9 +73,9 @@ QString s;
 			s += "bad I frame length";
 		else
 		{
-			s += QString(" (I frame): N(R) = %1, N(S) = %2, P/F = %3").arg(control >> 5).arg((control >> 1) & 3).arg((control & 4) ? 1 : 0);
+			s += QString(" (I frame): N(R) = %1, N(S) = %2, P/F = %3 ").arg(control >> 5).arg((control >> 1) & 3).arg((control & 4) ? 1 : 0);
 			if ((unsigned char)frame[PID_FIELD_INDEX] != PID_NO_LAYER_3_PROTOCOL)
-				s += QString(" unsupported PID type - %1").arg((unsigned)(unsigned char) frame[PID_FIELD_INDEX]);
+				s += QString("unsupported PID type - %1").arg((unsigned)(unsigned char) frame[PID_FIELD_INDEX]);
 			else
 			{
 				s += "info: " + QString::fromLocal8Bit(frame.mid(PID_FIELD_INDEX + 1, frame.length() - PID_FIELD_INDEX - 1 - 2));
@@ -83,9 +83,29 @@ QString s;
 		}
 	}
 	else if (!(control & 2))
-		s += QString(" (I frame): N(R) = %1, S = %2, P/F = %3").arg(control >> 5).arg((control >> 1) & 3).arg((control & 4) ? 1 : 0);
+	{
+		unsigned char t = (control >> 2) & 3;
+		s += QString(" (S frame): N(R) = %1, S = %2, P/F = %3 ").arg(control >> 5).arg(t).arg((control & 4) ? 1 : 0);
+		switch (t)
+		{
+			case SUP_RECEIVER_READY:	s += "RR"; break;
+			case SUP_RECEIVER_NOT_READY:	s += "RNR"; break;
+			case SUP_REJECT:		s += "REJ"; break;
+			case SUP_SELECTIVE_REJECT:	s += "SREJ"; break;
+		}
+	}
 	else
-		s += QString(" (U frame): M = %1, P/F = %2").arg(((control >> 2) & 3) | ((control >> 3) & ~ 3)).arg((control & 4) ? 1 : 0);
+	{
+		unsigned char m = ((control >> 2) & 3) | ((control >> 3) & ~ 3);
+		s += QString(" (U frame): M = %1, P/F = %2 ").arg(m).arg((control & 4) ? 1 : 0);
+		switch (m)
+		{
+			case UNN_ACKNOWLEDGE:			s += "UA"; break;
+			case UNN_SET_ASYNC_BALANCED_MODE:	s += "SABM"; break;
+			case UNN_DISCONNECT:			s += "DISC"; break;
+			default: 				s += "UNKNOWN"; break;
+		}
+	}
 	ui->plainTextEditDecodedFrames->appendPlainText(s);
 }
 
