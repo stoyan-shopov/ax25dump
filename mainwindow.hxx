@@ -11,7 +11,7 @@ class MainWindow;
 enum
 {
 	KISS_FEND			=	/* frame end character */	0xc0,
-	MINIMAL_FRAME_LENGTH_BYTES	=	/* kiss frame type byte */ 1 + /* address fields */ 14 + /* control byte */ 1,
+	MINIMAL_FRAME_LENGTH_BYTES	=	/* kiss frame type byte */ 1 + /* address fields */ 14 + /* control byte */ 1 + /* frame check sequence */ 2,
 	KISS_FRAME_TYPE_DATA		=	0,
 	CALLSIGN_FIELD_SIZE		=	6,
 	DEST_CALLSIGN_INDEX		=	1,

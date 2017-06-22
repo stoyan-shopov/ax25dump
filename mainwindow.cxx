@@ -1,5 +1,31 @@
+#include <stdint.h>
 #include "mainwindow.hxx"
 #include "ui_mainwindow.h"
+
+enum
+{
+	CRC_INIT	=	0,
+	CRC_POLY	=	0xa001,
+};
+
+uint16_t crc(const unsigned char * p, int len)
+{
+uint16_t c = CRC_INIT;
+unsigned char d;
+int i;
+
+	while (len --)
+	{
+		d = c ^ * p ++;
+		c >>= 8;
+		for (i = 0; i < 8; i ++)
+			if (d & (1 << i))
+				c ^= CRC_POLY >> (7 - i), d ^= CRC_POLY << (i + 1);
+
+	}
+	return c;
+}
+
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -46,10 +72,11 @@ QByteArray dest, src;
 int i;
 unsigned char dest_ssid, src_ssid, control;
 QString s;
+int length = frame.length();
 
-	if (frame.length() < MINIMAL_FRAME_LENGTH_BYTES)
+	if ((length = frame.length()) < MINIMAL_FRAME_LENGTH_BYTES)
 	{
-		if (frame.length())
+		if (length)
 			ui->plainTextEditDecodedFrames->appendPlainText("invalid frame - frame too short");
 		return;
 	}
@@ -65,11 +92,11 @@ QString s;
 	control = frame[CONTROL_FIELD_INDEX];
 	for (i = 0; i < dest.length(); dest[i] = (unsigned char) dest[i] >> 1, i ++);
 	for (i = 0; i < src.length(); src[i] = (unsigned char) src[i] >> 1, i ++);
-	s += QString::fromLocal8Bit(src) + " --> " + QString::fromLocal8Bit(dest);
+	s += QString::fromLocal8Bit(src) + QString("[SSID $%1]").arg(src_ssid, 2, 16, QChar('0')) + " --> " + QString::fromLocal8Bit(dest) + QString("[SSID $%1]").arg(dest_ssid, 2, 16, QChar('0'));
 	/* decode control byte */
 	if (!(control & 1))
 	{
-		if (frame.length() <= PID_FIELD_INDEX + /* 2 bytes for the FCS field */ 2)
+		if (length <= PID_FIELD_INDEX + /* 2 bytes for the FCS field */ 2)
 			s += "bad I frame length";
 		else
 		{
@@ -78,7 +105,7 @@ QString s;
 				s += QString("unsupported PID type - %1").arg((unsigned)(unsigned char) frame[PID_FIELD_INDEX]);
 			else
 			{
-				s += "info: " + QString::fromLocal8Bit(frame.mid(PID_FIELD_INDEX + 1, frame.length() - PID_FIELD_INDEX - 1 - 2));
+				s += "info: " + QString::fromLocal8Bit(frame.mid(PID_FIELD_INDEX + 1, length - PID_FIELD_INDEX - 1 - 2));
 			}
 		}
 	}
@@ -106,6 +133,9 @@ QString s;
 			default: 				s += "UNKNOWN"; break;
 		}
 	}
+	s += QString("\tCRC $%1 %2 ").arg((unsigned) (frame[length - 2] & 0xff), 2, 16).arg((unsigned) (frame[length - 1] & 0xff), 2, 16) + (crc((const unsigned char *) frame.constData(), length) ? "NOT OK" : "ok");
+	s.prepend("\n");
+	s.prepend(frame.toHex());
 	ui->plainTextEditDecodedFrames->appendPlainText(s);
 }
 
