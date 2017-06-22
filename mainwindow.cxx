@@ -27,7 +27,7 @@ void MainWindow::dump(const QString &prompt, const QByteArray &data)
 
 bool MainWindow::append(QByteArray &to, QByteArray &from)
 {
-auto pos = from.indexOf(0xc0);
+auto pos = from.indexOf(KISS_FEND);
 
 	if (pos == -1)
 	{
@@ -120,16 +120,19 @@ void MainWindow::s2Connected()
 void MainWindow::s1ReadyRead()
 {
 auto s = s1.readAll();
-	s2.write(s);
-	//dump("s1xxx", s);
 	while (append(s1_packet, s))
+	{
+		s2.write(QByteArray(1, KISS_FEND) + s1_packet + QByteArray(1, KISS_FEND));
 		dump("s1", s1_packet), decodeKissFrame(s1_packet), s1_packet.clear();
+	}
 }
 
 void MainWindow::s2ReadyRead()
 {
 auto s = s2.readAll();
-	s1.write(s);
 	while (append(s2_packet, s))
+	{
+		s1.write(QByteArray(1, KISS_FEND) + s2_packet + QByteArray(1, KISS_FEND));
 		dump("s2", s2_packet), decodeKissFrame(s2_packet), s2_packet.clear();
+	}
 }
