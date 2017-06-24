@@ -68,7 +68,7 @@ auto pos = from.indexOf(KISS_FEND);
 	
 }
 
-void MainWindow::decodeKissFrame(const QByteArray &frame)
+QString MainWindow::decodeKissFrame(const QByteArray &frame)
 {
 QByteArray dest, src;
 int i;
@@ -80,14 +80,11 @@ int length = frame.length();
 	if ((length = frame.length()) < AX25_KISS_MINIMAL_FRAME_LENGTH_BYTES)
 	{
 		if (length)
-			ui->plainTextEditDecodedFrames->appendPlainText("invalid frame - frame too short");
-		return;
+			return "invalid frame - frame too short";
+		return "";
 	}
 	if (frame[0] & 0xf != KISS_FRAME_TYPE_DATA)
-	{
-		ui->plainTextEditDecodedFrames->appendPlainText("unsupported frame type - skipping");
-		return;
-	}
+		return "unsupported frame type - skipping";
 	dest = frame.mid(DEST_CALLSIGN_INDEX, AX25_CALLSIGN_FIELD_SIZE);
 	dest_ssid = frame[DEST_SSID_INDEX];
 	src = frame.mid(SRC_CALLSIGN_INDEX, AX25_CALLSIGN_FIELD_SIZE);
@@ -149,7 +146,7 @@ int length = frame.length();
 	s += unpack_ax25_frame((const unsigned char *) frame.constData(), frame.length(), x) ? "\tframe unpacked successfully" : "frame unpack error";
 	s.prepend("\n");
 	s.prepend(frame.toHex());
-	ui->plainTextEditDecodedFrames->appendPlainText(s);
+	return s;
 }
 
 void MainWindow::s1Connected()
@@ -166,7 +163,11 @@ auto s = s1.readAll();
 	while (append(s1_packet, s))
 	{
 		s2.write(QByteArray(1, KISS_FEND) + s1_packet + QByteArray(1, KISS_FEND));
-		dump("s1", s1_packet), decodeKissFrame(s1_packet), s1_packet.clear();
+		dump("s1", s1_packet);
+		auto s = decodeKissFrame(s1_packet);
+		if (!s.isEmpty())
+			ui->plainTextEditDecodedFrames->appendPlainText(s);
+		s1_packet.clear();
 	}
 }
 
@@ -176,7 +177,11 @@ auto s = s2.readAll();
 	while (append(s2_packet, s))
 	{
 		s1.write(QByteArray(1, KISS_FEND) + s2_packet + QByteArray(1, KISS_FEND));
-		dump("s2", s2_packet), decodeKissFrame(s2_packet), s2_packet.clear();
+		dump("s2", s2_packet);
+		auto s = decodeKissFrame(s2_packet);
+		if (!s.isEmpty())
+			ui->plainTextEditDecodedFrames->appendPlainText(s);
+		s2_packet.clear();
 	}
 }
 
@@ -269,3 +274,8 @@ uint16_t fcs;
 	* p ++ = fcs >> 8;
 	return p - * kiss_buffer;
 }
+
+void ax25_kiss_packet_received(const unsigned char * kiss_frame, int kiss_frame_length)
+{
+}
+

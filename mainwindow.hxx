@@ -126,7 +126,7 @@ private:
 	Ui::MainWindow *ui;
 	void dump(const QString & prompt, const QByteArray & data);
 	bool append(QByteArray & to, QByteArray & from);
-	void decodeKissFrame(const QByteArray & frame);
+	QString decodeKissFrame(const QByteArray & frame);
 	QByteArray s1_packet, s2_packet;
 private slots:
 	void s1Connected(void);
