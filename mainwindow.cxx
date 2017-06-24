@@ -2,6 +2,8 @@
 #include "mainwindow.hxx"
 #include "ui_mainwindow.h"
 
+static struct ax25 ax25;
+
 enum
 {
 	CRC_INIT	=	0,
@@ -75,7 +77,7 @@ int command_or_response;
 QString s;
 int length = frame.length();
 
-	if ((length = frame.length()) < AX25_MINIMAL_FRAME_LENGTH_BYTES)
+	if ((length = frame.length()) < AX25_KISS_MINIMAL_FRAME_LENGTH_BYTES)
 	{
 		if (length)
 			ui->plainTextEditDecodedFrames->appendPlainText("invalid frame - frame too short");
@@ -182,7 +184,7 @@ bool unpack_ax25_frame(const unsigned char * kiss_frame, int kiss_frame_length, 
 {
 int i;
 unsigned char control;
-	if (kiss_frame_length < AX25_MINIMAL_FRAME_LENGTH_BYTES || crc(kiss_frame, kiss_frame_length) || ! (* kiss_frame & 0x80) || (* kiss_frame & 0xf) != KISS_FRAME_TYPE_DATA)
+	if (kiss_frame_length < AX25_KISS_MINIMAL_FRAME_LENGTH_BYTES || crc(kiss_frame, kiss_frame_length) || ! (* kiss_frame & 0x80) || (* kiss_frame & 0xf) != KISS_FRAME_TYPE_DATA)
 		return false;
 	memcpy(frame->dest_addr, frame + DEST_CALLSIGN_INDEX, sizeof frame->dest_addr);
 	memcpy(frame->src_addr, frame + DEST_CALLSIGN_INDEX, sizeof frame->src_addr);
@@ -228,4 +230,42 @@ unsigned char control;
 		memcpy(frame->info, kiss_frame + PID_FIELD_INDEX + 1, frame->length);
 	}
 	return true;
+}
+
+/* returns the length of the kiss frame constructed, -1 on error */
+int pack_ax25_frame_into_kiss_frame(const ax25_unpacked_frame *frame, unsigned char (*kiss_buffer)[AX25_KISS_MAX_FRAME_LENGTH])
+{
+unsigned char * p = * kiss_buffer;
+int i;
+uint16_t fcs;
+	/* put kiss byte */
+	* p ++ = 0x80;
+	/* assemble destination and source addresses - callsigns and ssids */
+	for (i = 0; i < AX25_CALLSIGN_FIELD_SIZE; i ++)
+		* p ++ = frame->dest_addr[i] << 1;
+	* p ++ = (frame->dest_ssid << 1) | AX25_SSID_UNUSED_BITS_MASK | (frame->is_command_frame ? 0x80 : 0);
+	for (i = 0; i < AX25_CALLSIGN_FIELD_SIZE; i ++)
+		* p ++ = frame->src_addr[i] << 1;
+	* p ++ = (frame->src_ssid << 1) | AX25_SSID_UNUSED_BITS_MASK | (frame->is_command_frame ? 0 : 0x80) | /* address terminator bit */ 1;
+	switch (frame->frame_type)
+	{
+		default:
+			return -1;
+		case AX25_FRAME_TYPE_INFORMATION:
+			/* construct control field */
+// to be done
+			return -1;
+			break;
+		case AX25_FRAME_TYPE_SUPERVISORY:
+			/* construct control field */
+			* p ++ = (ax25.vr << 5) | (frame->iframe.poll_bit << 4) | (frame->sframe.type << 2) | 1;
+			break;
+		case AX25_FRAME_TYPE_UNNUMBERED:
+			/* construct control field */
+			* p ++ = (ax25.vr << 5) | (frame->iframe.poll_bit << 4) | (frame->sframe.type << 2) | 1;
+	}
+	fcs = crc(* kiss_buffer, p - * kiss_buffer);
+	* p ++ = fcs;
+	* p ++ = fcs >> 8;
+	return p - * kiss_buffer;
 }
