@@ -14,7 +14,7 @@ enum
 	KISS_FEND			=	/* frame end character */	0xc0,
 	AX25_KISS_MINIMAL_FRAME_LENGTH_BYTES	=	/* kiss frame type byte */ 1 + /* address fields */ 14 + /* control byte */ 1 + /* frame check sequence */ 2,
 	KISS_FRAME_TYPE_DATA		=	0,
-	AX25_CALLSIGN_FIELD_SIZE		=	6,
+	AX25_CALLSIGN_FIELD_SIZE	=	6,
 	DEST_CALLSIGN_INDEX		=	1,
 	DEST_SSID_INDEX			=	DEST_CALLSIGN_INDEX + 6,
 	SRC_CALLSIGN_INDEX		=	DEST_SSID_INDEX + 1,
@@ -90,12 +90,12 @@ struct ax25_unpacked_frame
 	/* information data in the frame */
 	struct
 	{
-		int length;
+		int info_length;
 		unsigned char info[AX25_MAX_INFO_LENGTH];
 	};
 };
 
-bool unpack_ax25_frame(const unsigned char * kiss_frame, int kiss_frame_length, struct ax25_unpacked_frame * frame);
+bool unpack_ax25_kiss_frame(const unsigned char * kiss_frame, int kiss_frame_length, struct ax25_unpacked_frame * frame);
 /* returns the length of the kiss frame constructed, -1 on error */
 int pack_ax25_frame_into_kiss_frame(const struct ax25_unpacked_frame * frame, unsigned char (* kiss_buffer)[AX25_KISS_MAX_FRAME_LENGTH]);
 
@@ -128,6 +128,7 @@ private:
 	bool append(QByteArray & to, QByteArray & from);
 	QString decodeKissFrame(const QByteArray & frame);
 	QByteArray s1_packet, s2_packet;
+	void ax25_kiss_packet_received(const unsigned char * kiss_frame, int kiss_frame_length);
 private slots:
 	void s1Connected(void);
 	void s2Connected(void);
