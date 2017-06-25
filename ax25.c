@@ -125,4 +125,6 @@ uint16_t fcs;
 	return p - * kiss_buffer;
 }
 
+#ifndef QT_TEST_DRIVE
 #include "ax25-packet-received-callback.cxx"
+#endif
