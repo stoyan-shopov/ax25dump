@@ -11,6 +11,9 @@ int kiss_response_length;
 #ifdef QT_TEST_DRIVE
 	ui->plainTextEditAX25->appendPlainText(QString("received: ") + decodeKissFrame(QByteArray((const char *) kiss_frame, kiss_frame_length)));
 #endif	
+	if (!kiss_frame_length)
+		/* discard empty frames */
+		return;
 	memset(& response, 0, sizeof response);
 	if (!unpack_ax25_kiss_frame(kiss_frame, kiss_frame_length, & frame))
 	{
