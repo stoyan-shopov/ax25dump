@@ -87,7 +87,8 @@ struct ax25_unpacked_frame
 	};
 };
 
-struct ax25
+/* global ax25 state data structure */
+extern struct ax25
 {
 	enum
 	{
@@ -99,11 +100,13 @@ struct ax25
 	}
 	state;
 	unsigned char vs, va, vr;
-};
+}
+ax25;
 
 uint16_t crc(const unsigned char * p, int len);
 bool unpack_ax25_kiss_frame(const unsigned char * kiss_frame, int kiss_frame_length, struct ax25_unpacked_frame * frame);
 /* returns the length of the kiss frame constructed, -1 on error */
 int pack_ax25_frame_into_kiss_frame(const struct ax25_unpacked_frame * frame, unsigned char (* kiss_buffer)[AX25_KISS_MAX_FRAME_LENGTH]);
+void ax25_kiss_packet_received(const unsigned char * kiss_frame, int kiss_frame_length);
 
 #endif // AX25_H

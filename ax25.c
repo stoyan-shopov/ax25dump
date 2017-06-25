@@ -1,3 +1,4 @@
+#include <string.h>
 #include "ax25.h"
 
 enum
@@ -123,3 +124,5 @@ uint16_t fcs;
 	* p ++ = fcs >> 8;
 	return p - * kiss_buffer;
 }
+
+#include "ax25-packet-received-callback.cxx"

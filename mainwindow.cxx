@@ -2,7 +2,7 @@
 #include "mainwindow.hxx"
 #include "ui_mainwindow.h"
 
-static struct ax25 ax25;
+struct ax25 ax25;
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
