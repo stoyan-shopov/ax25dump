@@ -11,10 +11,17 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = ax25dump
 TEMPLATE = app
 
+DEFINES += QT_TEST_DRIVE=1
 
 SOURCES += main.cxx\
-        mainwindow.cxx
+        mainwindow.cxx \
+    ax25.c \
+    ax25-packet-received-callback.cxx
 
-HEADERS  += mainwindow.hxx
+HEADERS  += mainwindow.hxx \
+    ax25.h
 
 FORMS    += mainwindow.ui
+
+SOURCES -= \
+    ax25-packet-received-callback.cxx
