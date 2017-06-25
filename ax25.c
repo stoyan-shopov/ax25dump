@@ -126,5 +126,6 @@ uint16_t fcs;
 }
 
 #ifndef QT_TEST_DRIVE
+struct ax25 ax25;
 #include "ax25-packet-received-callback.cxx"
 #endif
