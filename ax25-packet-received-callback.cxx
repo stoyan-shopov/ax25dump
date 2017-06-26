@@ -93,6 +93,6 @@ int kiss_response_length;
 	else
 		ui->plainTextEditAX25->appendPlainText(QString("generated response: ") + decodeKissFrame(QByteArray((const char *) kiss_response, kiss_response_length)));
 #endif
-
+	ax25_kiss_response_ready_callback((const char *) kiss_response, kiss_response_length);
 }
 

@@ -108,5 +108,8 @@ bool unpack_ax25_kiss_frame(const unsigned char * kiss_frame, int kiss_frame_len
 /* returns the length of the kiss frame constructed, -1 on error */
 int pack_ax25_frame_into_kiss_frame(const struct ax25_unpacked_frame * frame, unsigned char (* kiss_buffer)[AX25_KISS_MAX_FRAME_LENGTH]);
 void ax25_kiss_packet_received(const unsigned char * kiss_frame, int kiss_frame_length);
+/* callback function called when a kiss response frame has been prepared;
+ * the kiss frame response buffer *DOES NOT* contain kiss frame delimiting FEND (0xc0) bytes */
+extern void ax25_kiss_response_ready_callback(const char * kiss_response, int kiss_response_length);
 
 #endif // AX25_H
