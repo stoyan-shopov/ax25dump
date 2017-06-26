@@ -1,3 +1,4 @@
+#include <QMessageBox>
 #include <stdint.h>
 #include "mainwindow.hxx"
 #include "ui_mainwindow.h"
@@ -13,6 +14,12 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(& s2, SIGNAL(connected()), this, SLOT(s2Connected()));
 	connect(& s1, SIGNAL(readyRead()), this, SLOT(s1ReadyRead()));
 	connect(& s2, SIGNAL(readyRead()), this, SLOT(s2ReadyRead()));
+	connect(& serial_port, SIGNAL(readyRead()), this, SLOT(serialPortReadyRead()));
+	serial_port.setPortName(SERIAL_PORT_NAME);
+	if (!serial_port.open(QIODevice::ReadWrite))
+		QMessageBox::warning(0, "error opening serial port",
+			QString("could not open serial port ") + serial_port.portName()
+				     + "\n\nserial communication will be unavailable");
 	s1.connectToHost("localhost", 5555);
 	s2.connectToHost("localhost", 5556);
 }
@@ -135,9 +142,12 @@ void MainWindow::s2Connected()
 void MainWindow::s1ReadyRead()
 {
 auto s = s1.readAll();
+QByteArray kiss_frame;
 	while (append(s1_packet, s))
 	{
-		s2.write(QByteArray(1, KISS_FEND) + s1_packet + QByteArray(1, KISS_FEND));
+		s2.write(kiss_frame = QByteArray(1, KISS_FEND) + s1_packet + QByteArray(1, KISS_FEND));
+		if (serial_port.isOpen())
+			serial_port.write(kiss_frame);
 		dump("s1", s1_packet);
 		auto s = decodeKissFrame(s1_packet);
 		if (!s.isEmpty())
@@ -160,6 +170,14 @@ auto s = s2.readAll();
 			ui->plainTextEditDecodedFrames->appendPlainText(s);
 		s2_packet.clear();
 	}
+}
+
+void MainWindow::serialPortReadyRead()
+{
+}
+
+void ax25_kiss_response_ready_callback(const char * kiss_response, int kiss_response_length)
+{
 }
 
 #include "ax25-packet-received-callback.cxx"
